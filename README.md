@@ -1,0 +1,2 @@
+# slidekick
+jQuery carousel plugin
