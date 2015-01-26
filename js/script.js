@@ -6,13 +6,19 @@
 	company: http://ivar.rs
 	since: 11.02.2012.
 
+	@todo: Rewrite this bullshit! I am ashamed of this code
 */
 
 
+/*
+ * Initializes all slidekicks on the page
+ * 
+ * @needs reiniti method for dynamic carousels that might appear
+ */
 $.fn.slidekick = function(options) {
 	var slidekicks = new Array();
-	if(options == undefined) 
-			var options = {};
+	if(options === undefined) { options = {};}
+	
 	this.each(function() {
 		options.container = this;
 		slidekicks.push(new Slidekick(options));
@@ -28,6 +34,7 @@ function Slidekick(obj) {
 	
 	//default values
 	this.container = null;
+	this.container_w = $(this.container).outerWidth(true);
 	this.viewport = null;
 	this.content = null;
 	this.pagination = null;
@@ -41,6 +48,7 @@ function Slidekick(obj) {
 	this.left_class='.slidekick-left';
 	this.right_class='.slidekick-right';
 	
+	this.responsive = false;
 	this.speed = 'normal';
 	this.rows = 1;
 	this.cols = 1;
@@ -68,7 +76,7 @@ function Slidekick(obj) {
 	this.onNext = function(){};
 	this.onPrevous = function(){};
 	
-	//load values from JSON
+	//load values from object
 	
 	if(obj.tidy != undefined)
 		this.tidy = obj.tidy;
@@ -84,6 +92,17 @@ function Slidekick(obj) {
 		}
 	}
 	this.container_class =  this.container.className;
+	
+	if (obj.responsive) {
+		var self = this;
+		$(window).resize(function(){
+			var nw = $(self.container).outerWidth(true);
+			if (self.container_w !== nw) {
+				self.container_w = $(self.container).outerWidth(true);
+				self.update();
+			}
+		});
+	}
 	
 	if(obj.viewport != undefined) {
 		this.viewport_class = obj.viewport;
@@ -219,15 +238,7 @@ function Slidekick(obj) {
 	if((obj.onPrevous != undefined)&&(typeof obj.onPrevous == 'function'))
 			this.onPrevous = obj.onPrevous;
 	
-	//calculate additional values		
-	this.items = $(this.content).children();
-	this.single_w = $(this.items[0]).outerWidth(true);
-	this.single_h = $(this.items[0]).outerHeight(true); 
-	this.viewport_w = this.cols * this.single_w;
-	this.viewport_h = this.rows * this.single_h;
-	this.items_per_page = this.cols * this.rows;
-	
-	this.pages = Math.ceil(this.items.length/(this.items_per_page));
+	this.update();
 	
 	//initialize
 	this.initCarousel();
@@ -252,11 +263,28 @@ function Slidekick(obj) {
 	
 	$(this.viewport).hover(
 		function(){
-			self.pause();
+			//self.pause();
 		},
 		function(){
-			self.resume();
+			//self.resume();
 	});
+}
+
+
+/*
+ * Updates size values on window resize if enabled for responsive design
+ * @todo: do it better
+ */
+Slidekick.prototype.update = function() {
+	//calculate additional values		
+	this.items = $(this.content).children();
+	this.single_w = $(this.items[0]).outerWidth(true);
+	this.single_h = $(this.items[0]).outerHeight(true); 
+	this.viewport_w = this.cols * this.single_w;
+	this.viewport_h = this.rows * this.single_h;
+	this.items_per_page = this.cols * this.rows;
+	
+	this.pages = Math.ceil(this.items.length/(this.items_per_page));
 }
 
 Slidekick.prototype.prevous = function() {
@@ -513,4 +541,3 @@ Slidekick.prototype.turnPage = function(page, skip) {
 		}
 	}
 }
-
